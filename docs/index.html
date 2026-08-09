@@ -3,25 +3,57 @@
 <head>
 <meta charset="utf-8">
 <meta name="viewport" content="width=device-width, initial-scale=1">
-<meta name="theme-color" media="(prefers-color-scheme: light)" content="#ffffff">
-<meta name="theme-color" media="(prefers-color-scheme: dark)" content="#0d0d0f">
+<meta name="theme-color" media="(prefers-color-scheme: light)" content="#f3f2f6">
+<meta name="theme-color" media="(prefers-color-scheme: dark)" content="#141419">
 <title>Set up your workout feed · Workout Feed</title>
 <meta name="description" content="How to publish a workout feed for the Workout Feed iOS app: host a JSON manifest and .workout files anywhere, and your planned workouts appear on your Apple Watch.">
 <style>
   :root {
     color-scheme: light dark;
-    --bg: #ffffff;
-    --fg: #1d1d1f;
-    --muted: #6e6e73;
-    --border: #e5e5ea;
-    --code-bg: #f6f6f7;
+
+    /* Surfaces — light (≈ #f3f2f6 base) */
+    --bg: oklch(0.965 0.01 294.4);
+    --bg-card: oklch(1 0 none / 0.78);
+    --bg-inset: oklch(0.19 0.01 285 / 0.045);
+    --bg-elevated: oklch(0.992 0.002 294.4);
+
+    /* Text (≈ #232229 at 1 / 0.72 / 0.5) */
+    --text-primary: oklch(0.24 0.012 286);
+    --text-secondary: oklch(0.24 0.012 286 / 0.72);
+    --text-muted: oklch(0.24 0.012 286 / 0.5);
+
+    /* Borders + shine */
+    --border-subtle: rgba(4, 4, 26, 0.1);
+    --border-strong: rgba(4, 4, 26, 0.18);
+    --border-shine: rgba(4, 4, 26, 0.27) 0px -0.5px 0.25px 0px inset,
+                    rgba(0, 0, 0, 0) 0px 0px 0px 0px inset,
+                    rgba(5, 5, 26, 0.18) 0px 0px 2px 0px;
+
+    /* Accent + semantics */
     --accent: #248a3d;
-    --accent-soft: rgba(52, 199, 89, 0.12);
+    --accent-soft: rgba(52, 199, 89, 0.14);
     --warn: #b25000;
-    --warn-soft: rgba(255, 149, 0, 0.12);
-    --err: #c4302b;
-    --err-soft: rgba(255, 59, 48, 0.08);
-    --btn-bg: #ffffff;
+    --warn-soft: rgba(255, 149, 0, 0.14);
+    --err: oklch(0.52 0.2 25.3);
+    --err-soft: oklch(0.6369 0.2078 25.3 / 0.08);
+    --focus-ring: rgba(36, 138, 61, 0.55);
+
+    /* Radii + motion */
+    --radius-sm: 6px;
+    --radius: 10px;
+    --radius-lg: 14px;
+    --radius-full: 9999px;
+    --motion-fast: 150ms;
+    --motion-fn: cubic-bezier(0.4, 0, 0.2, 1);
+
+    /* Type scale — minor third @ 16px root */
+    --text-xs: 0.694rem;
+    --text-sm: 0.833rem;
+    --text-base: 1rem;
+    --text-lg: 1.2rem;
+    --text-xl: 1.44rem;
+    --text-2xl: 1.728rem;
+
     /* Syntax tokens — Xcode default light. */
     --tok-kw: #9b2393;
     --tok-str: #c41a16;
@@ -33,18 +65,30 @@
   }
   @media (prefers-color-scheme: dark) {
     :root {
-      --bg: #0d0d0f;
-      --fg: #f5f5f7;
-      --muted: #98989d;
-      --border: #2c2c2e;
-      --code-bg: #1c1c1e;
+      /* Surfaces — dark */
+      --bg: oklch(0.19 0.01 294.67);
+      --bg-card: oklch(1 0 none / 0.05);
+      --bg-inset: oklch(1 0 none / 0.03);
+      --bg-elevated: oklch(0.22 0.0097 294.4);
+
+      --text-primary: oklch(0.9707 0.0027 none);
+      --text-secondary: oklch(1 0 none / 0.6);
+      --text-muted: oklch(1 0 none / 0.35);
+
+      --border-subtle: oklch(1 0 none / 0.06);
+      --border-strong: oklch(1 0 none / 0.12);
+      --border-shine: oklch(0.8736 0.0302 285.7 / 0.09) 0 0 0 1px inset,
+                      oklch(0.9349 0.031 285.7 / 0.13) 0 1px 0.5px 0 inset,
+                      oklch(0.1122 0.0198 282.7 / 0.54) 0 2px 4px -2px;
+
       --accent: #30d158;
       --accent-soft: rgba(48, 209, 88, 0.14);
       --warn: #ff9f0a;
       --warn-soft: rgba(255, 159, 10, 0.14);
-      --err: #ff453a;
-      --err-soft: rgba(255, 69, 58, 0.1);
-      --btn-bg: #2c2c2e;
+      --err: oklch(0.6369 0.2078 25.3);
+      --err-soft: oklch(0.6369 0.2078 25.3 / 0.12);
+      --focus-ring: rgba(48, 209, 88, 0.5);
+
       /* Syntax tokens — Xcode default dark. */
       --tok-kw: #fc5fa3;
       --tok-str: #fc6a5d;
@@ -57,84 +101,117 @@
   }
 
   * { box-sizing: border-box; }
-  html { scroll-behavior: smooth; }
+  html { scroll-behavior: smooth; background: var(--bg); }
   body {
     margin: 0;
     background: var(--bg);
-    color: var(--fg);
-    font: 17px/1.65 -apple-system, BlinkMacSystemFont, "Segoe UI", system-ui, sans-serif;
+    color: var(--text-secondary);
+    font: 500 1rem/1.65 -apple-system, BlinkMacSystemFont, "Segoe UI", system-ui, sans-serif;
+    font-variant-ligatures: none;
+    -webkit-font-smoothing: antialiased;
+    -moz-osx-font-smoothing: grayscale;
+    -webkit-tap-highlight-color: transparent;
     -webkit-text-size-adjust: 100%;
-    padding: 0 max(20px, env(safe-area-inset-left)) env(safe-area-inset-bottom) max(20px, env(safe-area-inset-right));
+    padding: 0 max(16px, env(safe-area-inset-left)) max(32px, env(safe-area-inset-bottom)) max(16px, env(safe-area-inset-right));
   }
-  main { max-width: 44rem; margin: 0 auto; }
+  main { max-width: 672px; margin: 0 auto; }
 
-  h1 { font-size: 1.9rem; line-height: 1.2; letter-spacing: -0.02em; margin: 0.6em 0 0.4em; }
-  h2 { font-size: 1.45rem; line-height: 1.25; letter-spacing: -0.015em; margin: 2.2em 0 0.5em; }
-  h3 { font-size: 1.1rem; margin: 1.6em 0 0.4em; }
+  :focus-visible { outline: 2px solid var(--focus-ring); outline-offset: 2px; }
+
+  h1 { font-size: var(--text-2xl); font-weight: 800; line-height: 1.2; color: var(--text-primary); margin: 16px 0 8px; }
+  h2 { font-size: var(--text-xl); font-weight: 700; line-height: 1.2; color: var(--text-primary); margin: 40px 0 12px; }
+  h3 { font-size: var(--text-lg); font-weight: 600; line-height: 1.2; color: var(--text-primary); margin: 28px 0 8px; }
   h2, h3 { scroll-margin-top: 1rem; }
-  p, ul, ol { margin: 0.7em 0; }
-  li { margin: 0.3em 0; }
-  a { color: var(--accent); text-decoration: none; }
+  p, ul, ol { margin: 8px 0; }
+  ul, ol { padding-left: 1.2em; }
+  li { margin: 4px 0; }
+  li::marker { color: var(--text-muted); }
+  a { color: var(--accent); text-decoration: none; transition: color var(--motion-fast) var(--motion-fn); }
   a:hover { text-decoration: underline; }
-  strong { font-weight: 600; }
-  .muted { color: var(--muted); }
+  strong { font-weight: 600; color: var(--text-primary); }
+  .muted { color: var(--text-muted); }
 
-  header.hero { padding-top: max(28px, env(safe-area-inset-top)); }
+  header.hero { padding-top: max(32px, env(safe-area-inset-top)); }
   .mark {
-    width: 56px; height: 56px; border-radius: 14px;
+    width: 56px; height: 56px; border-radius: var(--radius-lg);
     background: linear-gradient(160deg, #34c759, #1d9440);
     display: flex; align-items: center; justify-content: center;
-    box-shadow: 0 4px 14px rgba(29, 148, 64, 0.35);
+    box-shadow: var(--border-shine);
   }
   .mark svg { width: 30px; height: 30px; stroke: #fff; stroke-width: 2.2; fill: none; stroke-linecap: round; stroke-linejoin: round; }
-  .lede { font-size: 1.05rem; color: var(--muted); }
-  .lede strong { color: var(--fg); }
+  .lede { font-size: var(--text-base); line-height: 1.65; color: var(--text-secondary); }
+  .lede strong { color: var(--text-primary); }
 
   details.toc {
     margin: 1.4em 0 0;
-    border: 1px solid var(--border);
-    border-radius: 12px;
-    padding: 0.7em 1em;
-    background: var(--code-bg);
+    background: var(--bg-card);
+    box-shadow: var(--border-shine);
+    border-radius: var(--radius-lg);
+    padding: 12px 16px;
   }
-  details.toc summary { cursor: pointer; font-weight: 600; -webkit-tap-highlight-color: transparent; }
+  details.toc summary {
+    cursor: pointer;
+    display: flex; align-items: center; gap: 8px;
+    font-size: var(--text-sm); font-weight: 600;
+    text-transform: uppercase; letter-spacing: 0.04em;
+    color: var(--text-secondary);
+    list-style: none;
+    user-select: none;
+    -webkit-user-select: none;
+    -webkit-tap-highlight-color: transparent;
+  }
+  details.toc summary::-webkit-details-marker { display: none; }
+  /* Tabler "triangle" (filled, rounded corners) as a mask so it follows text color. */
+  details.toc summary::before {
+    content: "";
+    flex: none;
+    width: 10px; height: 10px;
+    background: currentColor;
+    -webkit-mask: url("data:image/svg+xml,%3Csvg xmlns='http://www.w3.org/2000/svg' viewBox='0 0 24 24'%3E%3Cpath d='M12 1.67a2.914 2.914 0 0 0 -2.492 1.403l-8.11 13.537a2.914 2.914 0 0 0 2.484 4.385h16.225a2.914 2.914 0 0 0 2.503 -4.371l-8.116 -13.546a2.917 2.917 0 0 0 -2.494 -1.408z'/%3E%3C/svg%3E") center / contain no-repeat;
+    mask: url("data:image/svg+xml,%3Csvg xmlns='http://www.w3.org/2000/svg' viewBox='0 0 24 24'%3E%3Cpath d='M12 1.67a2.914 2.914 0 0 0 -2.492 1.403l-8.11 13.537a2.914 2.914 0 0 0 2.484 4.385h16.225a2.914 2.914 0 0 0 2.503 -4.371l-8.116 -13.546a2.917 2.917 0 0 0 -2.494 -1.408z'/%3E%3C/svg%3E") center / contain no-repeat;
+    transform: rotate(90deg);
+    transition: transform var(--motion-fast) var(--motion-fn);
+  }
+  details.toc[open] summary::before { transform: rotate(180deg); }
   details.toc ol { margin: 0.6em 0 0.2em; padding-left: 1.4em; }
-  details.toc a { color: var(--fg); }
+  details.toc a { display: block; color: var(--text-primary); transition: none; }
   details.toc a:hover { color: var(--accent); }
 
   .codewrap { position: relative; margin: 1em 0; }
   pre {
     margin: 0;
-    background: var(--code-bg);
-    border: 1px solid var(--border);
-    border-radius: 12px;
+    background: var(--bg-inset);
+    border: 1px solid var(--border-subtle);
+    border-radius: var(--radius);
     padding: 14px 16px;
     overflow-x: auto;
-    font-size: 0.85rem;
-    line-height: 1.55;
+    font-size: var(--text-sm);
+    line-height: 1.65;
     -webkit-overflow-scrolling: touch;
   }
   code { font-family: ui-monospace, "SF Mono", Menlo, Consolas, monospace; }
   :not(pre) > code {
-    background: var(--code-bg);
-    border: 1px solid var(--border);
-    border-radius: 5px;
-    padding: 0.1em 0.35em;
+    background: var(--bg-card);
+    border-radius: 4px;
+    padding: 2px 6px;
     font-size: 0.85em;
     word-break: break-word;
   }
   .codewrap .copy {
     position: absolute; top: 8px; right: 8px;
-    font: 600 0.75rem/1 -apple-system, BlinkMacSystemFont, system-ui, sans-serif;
-    color: var(--muted);
-    background: var(--btn-bg);
-    border: 1px solid var(--border);
-    border-radius: 7px;
-    padding: 5px 9px;
+    font: 600 var(--text-xs)/1 -apple-system, BlinkMacSystemFont, system-ui, sans-serif;
+    color: var(--text-secondary);
+    background: var(--bg-elevated);
+    border: none;
+    box-shadow: var(--border-shine);
+    border-radius: var(--radius-sm);
+    padding: 6px 10px;
     cursor: pointer;
     -webkit-tap-highlight-color: transparent;
+    transition: color var(--motion-fast) var(--motion-fn);
   }
-  .codewrap .copy.done { color: var(--accent); border-color: var(--accent); }
+  .codewrap .copy:hover { color: var(--text-primary); }
+  .codewrap .copy.done { color: var(--accent); }
 
   /* Prism token → Xcode-ish palette. Punctuation/operators inherit the body color. */
   .token.comment { color: var(--tok-com); }
@@ -146,54 +223,60 @@
   .token.class-name { color: var(--tok-type); }
 
   .callout {
-    border-radius: 12px;
+    background: var(--accent-soft);
+    border-left: 3px solid var(--accent);
+    border-radius: 0 var(--radius-sm) var(--radius-sm) 0;
     padding: 12px 16px;
     margin: 1em 0;
-    border: 1px solid transparent;
   }
   .callout p { margin: 0.3em 0; }
-  .callout.note { background: var(--accent-soft); }
-  .callout.note::before { content: "Note"; display: block; font-weight: 700; font-size: 0.8rem; text-transform: uppercase; letter-spacing: 0.05em; color: var(--accent); }
-  .callout.warn { background: var(--warn-soft); }
-  .callout.warn::before { content: "Watch out"; display: block; font-weight: 700; font-size: 0.8rem; text-transform: uppercase; letter-spacing: 0.05em; color: var(--warn); }
+  .callout.note::before { content: "Note"; display: block; font-weight: 700; font-size: var(--text-xs); text-transform: uppercase; letter-spacing: 0.04em; color: var(--accent); }
+  .callout.warn { background: var(--warn-soft); border-left-color: var(--warn); }
+  .callout.warn::before { content: "Watch out"; display: block; font-weight: 700; font-size: var(--text-xs); text-transform: uppercase; letter-spacing: 0.04em; color: var(--warn); }
 
   .table-scroll { overflow-x: auto; margin: 1em 0; -webkit-overflow-scrolling: touch; }
-  table { border-collapse: collapse; min-width: 34rem; width: 100%; font-size: 0.92rem; }
-  th, td { text-align: left; padding: 8px 12px; border-bottom: 1px solid var(--border); vertical-align: top; }
-  th { font-size: 0.8rem; text-transform: uppercase; letter-spacing: 0.05em; color: var(--muted); }
+  table { border-collapse: collapse; min-width: 34rem; width: 100%; font-size: var(--text-sm); }
+  th, td { text-align: left; padding: 8px 12px; vertical-align: top; }
+  th { font-size: var(--text-xs); font-weight: 600; text-transform: uppercase; letter-spacing: 0.03em; color: var(--text-primary); border-bottom: 1px solid var(--border-strong); }
+  td { border-bottom: 1px solid var(--border-subtle); }
+  tbody tr:nth-child(even) td { background: var(--bg-inset); }
   td:first-child code { white-space: nowrap; }
 
   .flow {
     display: flex; flex-wrap: wrap; align-items: center; gap: 6px;
-    margin: 1.2em 0; font-size: 0.9rem; font-weight: 600;
+    margin: 1.2em 0; font-size: var(--text-sm); font-weight: 600;
   }
   .flow .step {
-    background: var(--code-bg); border: 1px solid var(--border);
-    border-radius: 10px; padding: 8px 12px;
+    background: var(--bg-card);
+    box-shadow: var(--border-shine);
+    border-radius: var(--radius-full);
+    padding: 8px 14px;
+    color: var(--text-primary);
   }
-  .flow .arrow { color: var(--muted); font-weight: 400; }
+  .flow .arrow { color: var(--text-muted); font-weight: 400; }
 
   .trouble { margin: 1.4em 0; }
   .trouble .err-msg {
     font-family: ui-monospace, "SF Mono", Menlo, Consolas, monospace;
-    font-size: 0.85rem;
+    font-size: var(--text-sm);
+    color: var(--text-primary);
     background: var(--err-soft);
     border-left: 3px solid var(--err);
-    border-radius: 0 10px 10px 0;
+    border-radius: 0 var(--radius-sm) var(--radius-sm) 0;
     padding: 10px 14px;
     margin: 0 0 0.4em;
     overflow-wrap: break-word;
   }
   .trouble p { margin: 0.3em 0; }
 
-  .faq dt { font-weight: 600; margin-top: 1.1em; }
-  .faq dd { margin: 0.25em 0 0; color: var(--muted); }
-  .faq dd strong, .faq dd code { color: var(--fg); }
+  .faq dt { font-weight: 600; color: var(--text-primary); margin-top: 1.1em; }
+  .faq dd { margin: 0.25em 0 0; color: var(--text-secondary); }
+  .faq dd strong, .faq dd code { color: var(--text-primary); }
 
   footer {
     margin-top: 3.5em; padding: 1.5em 0 2.5em;
-    border-top: 1px solid var(--border);
-    font-size: 0.9rem; color: var(--muted);
+    border-top: 1px solid var(--border-subtle);
+    font-size: var(--text-sm); color: var(--text-secondary);
   }
   footer nav { display: flex; flex-wrap: wrap; gap: 0.4em 1.2em; margin-bottom: 0.8em; }
 </style>
@@ -206,13 +289,13 @@
     <svg viewBox="0 0 24 24"><polyline points="23 4 23 10 17 10"/><polyline points="1 20 1 14 7 14"/><path d="M3.51 9a9 9 0 0 1 14.85-3.36L23 10M1 14l4.64 4.36A9 9 0 0 0 20.49 15"/></svg>
   </div>
   <h1>Set up your workout feed</h1>
-  <p class="lede">Workout Feed reads a small JSON file — the <strong>manifest</strong> — from a URL you control, downloads the workout files it lists, and schedules them into the Workout app on your Apple&nbsp;Watch. This guide takes you from nothing to a working feed in about five minutes.</p>
+  <p class="lede">Workout Feed reads a small JSON file (the <strong>manifest</strong>) from a URL you control, downloads the workout files it lists, and schedules them into the Workout app on your Apple&nbsp;Watch. This guide takes you from nothing to a working feed in about five minutes.</p>
 
   <details class="toc">
     <summary>On this page</summary>
     <ol>
       <li><a href="#how-it-works">How it works</a></li>
-      <li><a href="#quick-start">Quick start — a feed in 5 minutes</a></li>
+      <li><a href="#quick-start">Quick start: a feed in 5 minutes</a></li>
       <li><a href="#manifest">The manifest, in full</a></li>
       <li><a href="#workout-files">Making .workout files</a></li>
       <li><a href="#hosting">Hosting options</a></li>
@@ -235,17 +318,17 @@
 
 <p>A feed is just <strong>two kinds of static files</strong>:</p>
 <ul>
-  <li>One <strong>manifest</strong> (conventionally <code>index.json</code>) listing your planned workouts — what, when, and where the file for each one lives.</li>
-  <li>One or more <strong><code>.workout</code> files</strong> — Apple's binary workout-plan format, the same thing you get from <em>Share Workout</em> on the watch.</li>
+  <li>One <strong>manifest</strong> (conventionally <code>index.json</code>) listing your planned workouts: what, when, and where the file for each one lives.</li>
+  <li>One or more <strong><code>.workout</code> files</strong> in Apple's binary workout-plan format, the same thing you get from <em>Share Workout</em> on the watch.</li>
 </ul>
-<p>Anything that can serve those over HTTP is a valid feed: GitHub Pages, S3, nginx, a Raspberry Pi on your shelf. The app polls the manifest — on launch, on pull-to-refresh, and in the background — and keeps the watch schedule in sync with it. You never touch the watch.</p>
+<p>Anything that can serve those over HTTP is a valid feed: GitHub Pages, S3, nginx, a Raspberry Pi on your shelf. The app polls the manifest (on launch, on pull-to-refresh, and in the background) and keeps the watch schedule in sync with it. You never touch the watch.</p>
 <p>The app asks for two things:</p>
 <ul>
-  <li><strong>Feed URL</strong> — the manifest's URL. That's the only required field.</li>
-  <li><strong>Authorization</strong> — only if your host requires it. Most setups don't; <a href="#authorization">skip it</a> unless you know you need it.</li>
+  <li><strong>Feed URL</strong>: the manifest's URL. That's the only required field.</li>
+  <li><strong>Authorization</strong>: only if your host requires it. Most setups don't; <a href="#authorization">skip it</a> unless you know you need it.</li>
 </ul>
 
-<h2 id="quick-start">Quick start — a feed in 5 minutes</h2>
+<h2 id="quick-start">Quick start: a feed in 5 minutes</h2>
 
 <p>The simplest possible feed is two files on GitHub Pages. The same steps work on any static host.</p>
 
@@ -266,7 +349,7 @@ plan.asGoal({
 
 await saveWorkoutPlan(plan, "./easy-run.workout");</code></pre>
 <div class="callout note">
-  <p>No code at all: build the workout in the Workout app on your iPhone or watch, tap <strong>Share Workout</strong>, and the shared file is a ready-to-host <code>.workout</code> file.</p>
+  <p>If you'd rather not write any code, build the workout in the Workout app on your iPhone or watch and tap <strong>Share Workout</strong>. The shared file is a ready-to-host <code>.workout</code> file.</p>
 </div>
 
 <h3>2. Write the manifest next to it</h3>
@@ -295,12 +378,12 @@ await saveWorkoutPlan(plan, "./easy-run.workout");</code></pre>
 <p>Paste the URL into <strong>Feed URL</strong>, leave <strong>Authorization</strong> empty, tap <strong>Connect</strong>. The workout appears in the list, downloads, and lands on your watch's Workout app.</p>
 
 <div class="callout note">
-  <p>Prefer not to build a feed at all? <a href="https://github.com/bibixx/trenuj-se">trenuj.se</a> serves a ready-made feed for its training plans — see its README for the URL and token to paste here.</p>
+  <p>Prefer not to build a feed at all? <a href="https://github.com/bibixx/trenuj-se">trenuj.se</a> serves a ready-made feed for its training plans. See its README for the URL and token to paste here.</p>
 </div>
 
 <h2 id="manifest">The manifest, in full</h2>
 
-<p>A <code>GET</code> on your Feed URL must return JSON of this shape — here with every field present:</p>
+<p>A <code>GET</code> on your Feed URL must return JSON of this shape, shown here with every field present:</p>
 <pre><code class="language-json">{
   "version": 1,
   "workouts": [
@@ -324,19 +407,19 @@ await saveWorkoutPlan(plan, "./easy-run.workout");</code></pre>
     </tr>
     <tr>
       <td><code>workouts</code></td><td>yes</td>
-      <td>The list of planned workouts. An empty list is valid — it clears everything the app scheduled.</td>
+      <td>The list of planned workouts. An empty list is valid: it clears everything the app scheduled.</td>
     </tr>
     <tr>
       <td><code>date</code></td><td>yes</td>
-      <td>When to schedule it, in <strong>local wall-clock time on the phone</strong>: <code>2026-07-27</code> or <code>2026-07-27T07:00:00</code>. Date-only defaults to <strong>07:00</strong>. No timezone suffixes — 7 AM means 7 AM wherever you are.</td>
+      <td>When to schedule it, in <strong>local wall-clock time on the phone</strong>: <code>2026-07-27</code> or <code>2026-07-27T07:00:00</code>. Date-only defaults to <strong>07:00</strong>. No timezone suffixes: 7 AM means 7 AM wherever you are.</td>
     </tr>
     <tr>
       <td><code>url</code></td><td>yes</td>
-      <td>The workout file — relative to the manifest (recommended, keeps the feed portable) or absolute.</td>
+      <td>The workout file, either relative to the manifest (recommended, it keeps the feed portable) or absolute.</td>
     </tr>
     <tr>
       <td><code>type</code></td><td>no</td>
-      <td><code>"workout"</code> = Apple WorkoutKit binary. Missing → inferred from the <code>.workout</code> extension. <strong>Unknown types are silently skipped</strong> — the forward-compatibility door for e.g. <code>.fit</code>.</td>
+      <td><code>"workout"</code> = Apple WorkoutKit binary. Missing → inferred from the <code>.workout</code> extension. <strong>Unknown types are silently skipped</strong>, which leaves room for future formats like <code>.fit</code>.</td>
     </tr>
     <tr>
       <td><code>id</code>, <code>title</code></td><td>no</td>
@@ -347,7 +430,7 @@ await saveWorkoutPlan(plan, "./easy-run.workout");</code></pre>
 </div>
 
 <ul>
-  <li><strong>Trailing slash:</strong> a Feed URL ending in <code>/</code> gets <code>index.json</code> appended — <code>https://x.com/feed/</code> and <code>https://x.com/feed/index.json</code> are the same feed.</li>
+  <li><strong>Trailing slash:</strong> a Feed URL ending in <code>/</code> gets <code>index.json</code> appended: <code>https://x.com/feed/</code> and <code>https://x.com/feed/index.json</code> are the same feed.</li>
   <li><strong>Content type doesn't matter:</strong> the app parses the response body as JSON regardless of headers, and the URL doesn't have to end in <code>.json</code>.</li>
 </ul>
 
@@ -356,10 +439,10 @@ await saveWorkoutPlan(plan, "./easy-run.workout");</code></pre>
 <p><code>.workout</code> is Apple's binary format for planned workouts (WorkoutKit's <code>WorkoutPlan</code>). Three ways to produce one:</p>
 
 <h3>Share from the Workout app</h3>
-<p>Build the workout on your iPhone or watch and tap <strong>Share Workout</strong> — the shared file is a <code>.workout</code> file, ready to host as-is.</p>
+<p>Build the workout on your iPhone or watch and tap <strong>Share Workout</strong>. The shared file is a <code>.workout</code> file, ready to host as-is.</p>
 
 <h3><code>@bibixx/workoutkit</code> (TypeScript)</h3>
-<p>Full programmatic control — intervals, goals, and alerts. An interval session, for example:</p>
+<p>Full programmatic control over intervals, goals, and alerts. An interval session, for example:</p>
 <pre><code class="language-js">import { WorkoutPlan, Step, Distance, Duration, DistanceGoal, TimeGoal } from "@bibixx/workoutkit";
 import { saveWorkoutPlan } from "@bibixx/workoutkit/fs";
 
@@ -385,15 +468,15 @@ await saveWorkoutPlan(plan, "./tempo-intervals.workout");</code></pre>
 <p>See the <a href="https://github.com/bibixx/workoutkit">package README</a> for pacer and triathlon variants, heart-rate/power/pace alerts, and JSON interop.</p>
 
 <h3>Swift, with Apple's WorkoutKit</h3>
-<p>If you'd rather stay in the Apple ecosystem: build a <a href="https://developer.apple.com/documentation/workoutkit">WorkoutKit</a> <code>WorkoutPlan</code> and export it — a <code>.workout</code> file is exactly what WorkoutKit produces when a plan is shared.</p>
+<p>If you'd rather stay in the Apple ecosystem: build a <a href="https://developer.apple.com/documentation/workoutkit">WorkoutKit</a> <code>WorkoutPlan</code> and export it; a <code>.workout</code> file is exactly what WorkoutKit produces when a plan is shared.</p>
 
 <h2 id="hosting">Hosting options</h2>
 
 <ul>
-  <li><strong>GitHub Pages</strong> — free, HTTPS, zero maintenance; the <a href="#quick-start">quick-start</a> path.</li>
-  <li><strong>S3 / R2 / Netlify / Vercel</strong> — drop the folder in a bucket or a drag-and-drop deploy; the feed URL is the manifest's public URL.</li>
-  <li><strong>Your own server</strong> — nginx, Caddy, anything: two static routes and you're done.</li>
-  <li><strong>A dynamic server</strong> — the manifest doesn't have to be a literal file. Anything that answers <code>GET</code> with the JSON works. That's how <a href="https://github.com/bibixx/trenuj-se">trenuj.se</a> does it: it serves the contract live at <code>/api/watch/index.json</code>, authenticated by a long-lived watch token.</li>
+  <li><strong>GitHub Pages</strong>: free, HTTPS, zero maintenance; the <a href="#quick-start">quick-start</a> path.</li>
+  <li><strong>S3 / R2 / Netlify / Vercel</strong>: drop the folder in a bucket or a drag-and-drop deploy; the feed URL is the manifest's public URL.</li>
+  <li><strong>Your own server</strong>: nginx, Caddy, anything. Two static routes and you're done.</li>
+  <li><strong>A dynamic server</strong>: the manifest doesn't have to be a literal file. Anything that answers <code>GET</code> with the JSON works. That's how <a href="https://github.com/bibixx/trenuj-se">trenuj.se</a> does it: it serves the contract live at <code>/api/watch/index.json</code>, authenticated by a long-lived watch token.</li>
 </ul>
 
 <h2 id="authorization">Protecting a private feed</h2>
@@ -401,11 +484,11 @@ await saveWorkoutPlan(plan, "./tempo-intervals.workout");</code></pre>
 <p>The app has exactly one auth knob: the <strong>Authorization</strong> field. Whatever you type there is sent <strong>verbatim</strong> as the <code>Authorization</code> header on every feed request.</p>
 
 <div class="callout warn">
-  <p><strong>You include the scheme yourself.</strong> If your server expects a bearer token, enter <code>Bearer abc123</code> — not just <code>abc123</code>. Forgetting the <code>Bearer&nbsp;</code> prefix is the most common setup mistake.</p>
+  <p><strong>You include the scheme yourself.</strong> If your server expects a bearer token, enter <code>Bearer abc123</code>, not just <code>abc123</code>. Forgetting the <code>Bearer&nbsp;</code> prefix is the most common setup mistake.</p>
 </div>
 
 <ul>
-  <li>The header is sent <strong>only to the manifest's own host and port</strong> — never to a third-party host that an absolute workout <code>url</code> might point at. If your <code>.workout</code> files live elsewhere, that host must be publicly readable.</li>
+  <li>The header is sent <strong>only to the manifest's own host and port</strong>, never to a third-party host that an absolute workout <code>url</code> might point at. If your <code>.workout</code> files live elsewhere, that host must be publicly readable.</li>
   <li>The value is stored in the iOS Keychain on your phone.</li>
   <li>Server-side, check the header however you like: a reverse-proxy token check, basic auth, or long-lived per-device tokens like trenuj.se's watch tokens.</li>
   <li>Public feed? Leave the field empty.</li>
@@ -414,10 +497,10 @@ await saveWorkoutPlan(plan, "./tempo-intervals.workout");</code></pre>
 <h2 id="syncing">How syncing behaves</h2>
 
 <ul>
-  <li><strong>No caching.</strong> The app fetches the manifest fresh every time — an edit on your host is picked up on the very next sync.</li>
+  <li><strong>No caching.</strong> The app fetches the manifest fresh every time, so an edit on your host is picked up on the very next sync.</li>
   <li><strong>When it syncs:</strong> on app launch (throttled to once per 30 minutes), on pull-to-refresh (instant), and via iOS background refresh (best-effort; iOS decides the actual timing). The foreground check interval is configurable in Settings.</li>
-  <li><strong>Identity is <code>url</code> + <code>date</code>.</strong> Unchanged entries are left alone — completion state on the watch is preserved. Change either field and the entry is replaced.</li>
-  <li><strong>Safe pruning.</strong> Entries removed from the feed are removed from the watch — but only on a clean pass. If any file failed to download, nothing is deleted, so a flaky network can't wipe your schedule.</li>
+  <li><strong>Identity is <code>url</code> + <code>date</code>.</strong> Unchanged entries are left alone, and completion state on the watch is preserved. Change either field and the entry is replaced.</li>
+  <li><strong>Safe pruning.</strong> Entries removed from the feed are removed from the watch, but only on a clean pass. If any file failed to download, nothing is deleted, so a flaky network can't wipe your schedule.</li>
   <li><strong>Empty feed = clear.</strong> Publishing <code>"workouts": []</code> removes everything the app scheduled.</li>
 </ul>
 
@@ -432,12 +515,12 @@ await saveWorkoutPlan(plan, "./tempo-intervals.workout");</code></pre>
 
 <div class="trouble">
   <p class="err-msg">The feed returned HTTP 401 for index.json — …</p>
-  <p>(Or 403.) The host wants authentication. Fill in the Authorization field — and remember to include the scheme (<code>Bearer …</code>) yourself. Whatever your server put in the response body is echoed after the dash, so your server can leave a hint there.</p>
+  <p>(Or 403.) The host wants authentication. Fill in the Authorization field, and remember to include the scheme (<code>Bearer …</code>) yourself. Whatever your server put in the response body is echoed after the dash, so your server can leave a hint there.</p>
 </div>
 
 <div class="trouble">
   <p class="err-msg">The feed returned HTTP 404 for index.json</p>
-  <p>Wrong path. Open the URL in Safari — you should see raw JSON. Remember the trailing-slash rule: <code>…/feed/</code> means <code>…/feed/index.json</code>.</p>
+  <p>Wrong path. Open the URL in Safari; you should see raw JSON. Remember the trailing-slash rule: <code>…/feed/</code> means <code>…/feed/index.json</code>.</p>
 </div>
 
 <div class="trouble">
@@ -452,22 +535,22 @@ await saveWorkoutPlan(plan, "./tempo-intervals.workout");</code></pre>
 
 <div class="trouble">
   <p class="err-msg">This doesn't look like a workout feed (missing or malformed “workouts” list).</p>
-  <p>The URL returned something other than the manifest — an HTML page, a login redirect, invalid JSON, or a misspelled <code>workouts</code> key. Open it in Safari or run it through a JSON validator.</p>
+  <p>The URL returned something other than the manifest: an HTML page, a login redirect, invalid JSON, or a misspelled <code>workouts</code> key. Open it in Safari or run it through a JSON validator.</p>
 </div>
 
 <div class="trouble">
   <p class="err-msg">not a valid .workout file</p>
-  <p>Shown on a single row: the file at that workout's <code>url</code> isn't a WorkoutKit binary — often an HTML 404 page served with status 200, or a text file. <code>curl -sI &lt;url&gt;</code> and check what actually comes back.</p>
+  <p>Shown on a single row: the file at that workout's <code>url</code> isn't a WorkoutKit binary; it's often an HTML 404 page served with status 200, or a text file. <code>curl -sI &lt;url&gt;</code> and check what actually comes back.</p>
 </div>
 
 <div class="trouble">
   <p class="err-msg">A workout from the feed never appears in the app</p>
-  <p>Its <code>type</code> is unknown (e.g. <code>.fit</code> — not supported yet) and it was skipped, or its <code>date</code> is in the past. The Debug screen — Settings → tap <strong>Version</strong> five times — shows skipped items and the raw manifest.</p>
+  <p>Its <code>type</code> is unknown (e.g. <code>.fit</code>, which isn't supported yet) and it was skipped, or its <code>date</code> is in the past. The Debug screen (Settings → tap <strong>Version</strong> five times) shows skipped items and the raw manifest.</p>
 </div>
 
 <div class="trouble">
   <p class="err-msg">Rows say “on watch” but the watch shows nothing</p>
-  <p>Give the pair a moment — the phone hands workouts to the watch over its own sync channel. Check the Watch app's connectivity if it persists.</p>
+  <p>Give the pair a moment; the phone hands workouts to the watch over its own sync channel. Check the Watch app's connectivity if it persists.</p>
 </div>
 
 <h2 id="faq">FAQ</h2>
@@ -477,16 +560,16 @@ await saveWorkoutPlan(plan, "./tempo-intervals.workout");</code></pre>
   <dd><strong>07:00</strong>, local time.</dd>
 
   <dt>How are timezones handled?</dt>
-  <dd>They aren't — deliberately. Dates are wall-clock time on the phone: <code>2026-07-27T07:00:00</code> is 7 AM wherever you wake up.</dd>
+  <dd>They aren't, deliberately. Dates are wall-clock time on the phone: <code>2026-07-27T07:00:00</code> is 7 AM wherever you wake up.</dd>
 
   <dt>Can I serve <code>.fit</code> files?</dt>
   <dd>Not yet. Set <code>type</code> on those entries and they'll be skipped cleanly today and picked up when support lands.</dd>
 
   <dt>Can I use multiple feeds?</dt>
-  <dd>Not yet — it's on the roadmap. One feed per phone for now.</dd>
+  <dd>Not yet; it's on the roadmap. One feed per phone for now.</dd>
 
   <dt>If I delete a workout from the feed, does it leave the watch?</dt>
-  <dd>Yes, on the next clean sync — see <a href="#syncing">how syncing behaves</a>.</dd>
+  <dd>Yes, on the next clean sync (see <a href="#syncing">how syncing behaves</a>).</dd>
 
   <dt>Does the app phone home?</dt>
   <dd>No. It only ever talks to the URL you configure.</dd>
