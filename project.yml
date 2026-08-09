@@ -31,9 +31,10 @@ targets:
           - dev.bibixx.workout-feed.refresh
         UIBackgroundModes:
           - fetch
-        # Allow http to a LAN dev server (e.g. wrangler on your Mac's IP). Public https is unaffected.
+        # Allow plain-http feeds anywhere (LAN dev servers, homelabs, static hosts without TLS).
+        # Trade-off: over http the Authorization header travels in cleartext.
         NSAppTransportSecurity:
-          NSAllowsLocalNetworking: true
+          NSAllowsArbitraryLoads: true
         # WorkoutScheduler mostly uses its own runtime prompt; these are here in case iOS asks.
         NSHealthShareUsageDescription: Used to schedule planned workouts onto your Apple Watch.
         NSHealthUpdateUsageDescription: Used to schedule planned workouts onto your Apple Watch.
