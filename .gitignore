@@ -1,0 +1,14 @@
+# XcodeGen generates the project and Info.plist; don't commit them. (Going manual? Delete these.)
+*.xcodeproj/
+Info.plist
+
+# Xcode
+*.xcworkspace/
+xcuserdata/
+DerivedData/
+build/
+.build/
+*.pbxuser
+*.mode1v3
+*.mode2v3
+*.perspectivev3
