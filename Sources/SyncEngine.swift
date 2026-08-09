@@ -138,7 +138,14 @@ enum SyncEngine {
         }))
 
         let state = await WorkoutScheduler.shared.requestAuthorization()
-        guard state == .authorized else { throw SyncError.notAuthorized(state) }
+        guard state == .authorized else {
+            // Without authorization the seeded rows would spin forever — resolve them
+            // all to a visible "can't schedule" state instead.
+            for item in items {
+                onEvent?(.itemUpdate(uiKey: uiKey(item), state: .skipped("can't schedule — no permission"), title: nil, symbol: nil))
+            }
+            throw SyncError.notAuthorized(state)
+        }
 
         let existing = await WorkoutScheduler.shared.scheduledWorkouts
         var existingByKey: [PlanKey: ScheduledWorkoutPlan] = [:]
