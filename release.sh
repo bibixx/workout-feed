@@ -59,8 +59,13 @@ with open(path, "w") as f:
 PY
 
 git add "$SOURCE_JSON"
-git commit -m "release: $TAG"
-git tag "$TAG"
+if git diff --cached --quiet; then
+  echo "- $SOURCE_JSON unchanged (rerun after a partial release?)"
+else
+  git commit -m "release: $TAG"
+fi
+# -m keeps this working under tag-signing git configs, which refuse message-less tags.
+git tag -m "$TAG" "$TAG"
 git push origin main "$TAG"
 
 echo "- Creating GitHub release $TAG..."
