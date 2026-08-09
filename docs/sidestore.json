@@ -22,7 +22,16 @@
           "NSHealthUpdateUsageDescription": "Used to schedule planned workouts onto your Apple Watch."
         }
       },
-      "versions": []
+      "versions": [
+        {
+          "version": "0.3",
+          "date": "2026-08-10",
+          "localizedDescription": "First SideStore release.",
+          "downloadURL": "https://github.com/bibixx/workout-feed/releases/download/v0.3/WorkoutFeed.ipa",
+          "size": 3720833,
+          "minOSVersion": "17.0"
+        }
+      ]
     }
   ]
 }
