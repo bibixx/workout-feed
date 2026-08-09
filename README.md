@@ -64,6 +64,7 @@
       <ul>
         <li><a href="#prerequisites">Prerequisites</a></li>
         <li><a href="#installation">Installation</a></li>
+        <li><a href="#running-in-the-simulator">Running in the Simulator</a></li>
       </ul>
     </li>
     <li>
@@ -127,23 +128,34 @@ There is no App Store release — you build and install the app onto your own iP
   ```sh
   brew install xcodegen
   ```
-* An iPhone (iOS 17+) paired with an Apple Watch. A free Apple developer account is enough.
+* An iPhone (iOS 17+) paired with an Apple Watch — to see workouts arrive on a real watch. For development the iOS Simulator is enough, scheduling included (see [Running in the Simulator](#running-in-the-simulator)). A free Apple developer account suffices for device installs.
 
 ### Installation
 
-1. Clone the repo
+1. Clone the repo and generate the Xcode project (it's gitignored — XcodeGen generates it from `project.yml`):
    ```sh
    git clone https://github.com/bibixx/workout-feed.git
+   cd workout-feed
+   xcodegen generate
    ```
-2. Set `DEVELOPMENT_TEAM` in `project.yml` to your own team id. Signing (team + automatic style) is baked into `project.yml`, so regenerating the project never wipes it.
-3. Build, sign, and install to your connected (or Wi-Fi-paired) iPhone — no Xcode GUI needed:
-   ```sh
-   ./deploy.sh
-   ```
-   The script runs `xcodegen generate` for you when the `.xcodeproj` is missing; re-run `xcodegen generate` manually after adding/removing files or editing `project.yml`.
+   Re-run `xcodegen generate` after adding/removing files or editing `project.yml`.
+2. Open `WorkoutFeed.xcodeproj` in Xcode, pick a destination (any iPhone Simulator, or your phone), and hit **⌘R**. For device runs, first set `DEVELOPMENT_TEAM` in `project.yml` to your own team id — signing (team + automatic style) is baked into `project.yml`, so regenerating the project never wipes it.
+
+Prefer the terminal? `deploy.sh` builds, signs, and installs without the Xcode GUI (it also runs `xcodegen generate` for you when the project is missing):
+
+```sh
+./deploy.sh        # install to your connected (or Wi-Fi-paired) iPhone
+./deploy.sh --sim  # build for the Simulator, boot one, install + launch
+```
 
 > [!NOTE]
 > Free-account signing expires every 7 days — re-run `./deploy.sh` (or use AltStore/SideStore auto-refresh).
+
+### Running in the Simulator
+
+The whole app works in the iOS Simulator — including scheduling. WorkoutKit's permission prompt appears on first sync, and once granted, workouts land in the simulator's scheduler: rows reach the "on watch" state and the schedule survives relaunches (verified on the iOS 26 runtime). Onboarding, settings, and the [debug screen](#debug-screen) are fully usable too. What you *can't* see is the watch side of the story — whether a workout actually shows up in a watch's Workout app needs real hardware.
+
+**Don't bother pairing a watch simulator.** You *can* pair one (`xcrun simctl pair <watch-udid> <phone-udid>`, with a watchOS runtime installed via Xcode → Settings → Components) — but the watchOS simulator's Workout app is disabled: it launches straight to *"This feature is not available."* There is nothing to see on the simulated watch. A real iPhone + Apple Watch is the only way to verify the watch end of scheduling.
 
 <p align="right">(<a href="#readme-top">back to top</a>)</p>
 
