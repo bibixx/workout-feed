@@ -3,7 +3,7 @@
   "identifier": "dev.bibixx.workout-feed.source",
   "subtitle": "Planned workouts on your Apple Watch, from any feed URL.",
   "description": "Source for Workout Feed — an iOS app that keeps the Apple Watch's native Workout app stocked with your upcoming planned workouts, from any .workout feed URL you point it at.",
-  "iconURL": "https://raw.githubusercontent.com/bibixx/workout-feed/main/WorkoutFeed.icon/Assets/refresh.png",
+  "iconURL": "https://bibixx.github.io/workout-feed/icon.png",
   "website": "https://bibixx.github.io/workout-feed/",
   "apps": [
     {
@@ -12,7 +12,7 @@
       "developerName": "Bartosz Legięć",
       "subtitle": "Planned workouts on your Apple Watch, from any feed URL.",
       "localizedDescription": "Point Workout Feed at a feed URL (a small JSON manifest plus workout files, hostable on any static host) and your planned workouts appear in the watch's native Workout app automatically. Diff-based sync preserves completion state, background refresh keeps the schedule stocked, and disconnecting cleans up everything the app scheduled.",
-      "iconURL": "https://raw.githubusercontent.com/bibixx/workout-feed/main/WorkoutFeed.icon/Assets/refresh.png",
+      "iconURL": "https://bibixx.github.io/workout-feed/icon.png",
       "tintColor": "#8A38F5",
       "category": "utilities",
       "appPermissions": {
