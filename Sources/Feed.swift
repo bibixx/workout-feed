@@ -27,7 +27,9 @@ enum FeedItemKind: Equatable {
 enum FeedError: LocalizedError {
     case notConfigured
     case badURL(String)
-    case http(Int, String)
+    case http(Int, String, String?)
+    case transport(String, String)
+    case notHTTP(String)
     case notAManifest
     case badItemURL(String)
 
@@ -37,8 +39,14 @@ enum FeedError: LocalizedError {
             return "Add a feed first."
         case .badURL(let url):
             return "“\(url)” isn't a valid URL."
-        case .http(let code, let what):
-            return "The feed returned HTTP \(code) for \(what)."
+        case .http(let code, let what, let body):
+            let base = "The feed returned HTTP \(code) for \(what)"
+            guard let body else { return base + "." }
+            return base + " — \(body)"
+        case .transport(let what, let reason):
+            return "Couldn't load \(what) — \(reason)."
+        case .notHTTP(let what):
+            return "The feed returned a non-HTTP response for \(what)."
         case .notAManifest:
             return "This doesn't look like a workout feed (missing or malformed “workouts” list)."
         case .badItemURL(let label):
@@ -98,12 +106,56 @@ enum FeedClient {
         if let auth = config.authHeader, !auth.isEmpty, url.host == manifestURL.host, url.port == manifestURL.port {
             request.setValue(auth, forHTTPHeaderField: "Authorization")
         }
-        let (data, response) = try await URLSession.shared.data(for: request)
-        let status = (response as? HTTPURLResponse)?.statusCode ?? 0
-        guard status == 200 else {
-            let what = url.lastPathComponent.isEmpty ? url.absoluteString : url.lastPathComponent
-            throw FeedError.http(status, what)
+        let what = url.lastPathComponent.isEmpty ? url.absoluteString : url.lastPathComponent
+        let data: Data
+        let response: URLResponse
+        do {
+            (data, response) = try await URLSession.shared.data(for: request)
+        } catch {
+            throw FeedError.transport(what, reason(for: error, url: url))
+        }
+        guard let http = response as? HTTPURLResponse else { throw FeedError.notHTTP(what) }
+        guard (200..<300).contains(http.statusCode) else {
+            throw FeedError.http(http.statusCode, what, bodySnippet(data, response: http))
         }
         return data
+    }
+
+    private static func reason(for error: Error, url: URL) -> String {
+        guard let urlError = error as? URLError else { return withoutTrailingPeriod(error.localizedDescription) }
+        switch urlError.code {
+        case .appTransportSecurityRequiresSecureConnection:
+            return "iOS blocked the insecure connection — use “https”"
+        case .timedOut:
+            return "the request timed out"
+        case .notConnectedToInternet:
+            return "no internet connection"
+        case .networkConnectionLost:
+            return "the connection was lost"
+        case .cannotFindHost, .dnsLookupFailed:
+            return "couldn't find the server \(url.host ?? "")"
+        case .cannotConnectToHost:
+            return "couldn't connect to \(url.host ?? "the server")"
+        case .secureConnectionFailed, .serverCertificateUntrusted, .serverCertificateHasBadDate,
+             .serverCertificateHasUnknownRoot, .serverCertificateNotYetValid:
+            return "secure connection failed"
+        default:
+            return withoutTrailingPeriod(urlError.localizedDescription)
+        }
+    }
+
+    /// The transport message appends its own "." — Foundation's descriptions bring one too.
+    private static func withoutTrailingPeriod(_ text: String) -> String {
+        let trimmed = text.trimmed
+        return trimmed.hasSuffix(".") && !trimmed.hasSuffix("...") ? String(trimmed.dropLast()) : trimmed
+    }
+
+    /// Error bodies are echoed verbatim — any feed can say anything, so no parsing or field
+    /// extraction — but only textual ones; never dump a binary body into the UI.
+    private static func bodySnippet(_ data: Data, response: HTTPURLResponse) -> String? {
+        let contentType = (response.value(forHTTPHeaderField: "Content-Type") ?? "").lowercased()
+        guard contentType.contains("json") || contentType.contains("text") else { return nil }
+        guard let text = String(data: data, encoding: .utf8)?.trimmed, !text.isEmpty else { return nil }
+        return text.count > 140 ? String(text.prefix(140)) + "…" : text
     }
 }
