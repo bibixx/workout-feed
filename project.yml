@@ -25,6 +25,10 @@ targets:
       path: Info.plist
       properties:
         CFBundleDisplayName: Workout Feed
+        # Single source of truth for versions is MARKETING_VERSION/CURRENT_PROJECT_VERSION below;
+        # without these, XcodeGen hardcodes 1.0/1 into the generated Info.plist.
+        CFBundleShortVersionString: $(MARKETING_VERSION)
+        CFBundleVersion: $(CURRENT_PROJECT_VERSION)
         UILaunchScreen: {}
         # Background App Refresh top-up (see SyncEngine.refreshTaskID).
         BGTaskSchedulerPermittedIdentifiers:
@@ -45,7 +49,7 @@ targets:
         # Signing lives here so `xcodegen generate` never wipes it. Other developers: change to your own team.
         DEVELOPMENT_TEAM: 49FAWJ5CQ9
         CODE_SIGN_STYLE: Automatic
-        MARKETING_VERSION: "0.2"
-        CURRENT_PROJECT_VERSION: "4"
+        MARKETING_VERSION: "0.3"
+        CURRENT_PROJECT_VERSION: "5"
         TARGETED_DEVICE_FAMILY: "1"
         SWIFT_VERSION: "5.0"

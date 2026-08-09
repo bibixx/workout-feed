@@ -64,6 +64,7 @@
     <li>
       <a href="#getting-started">Getting Started</a>
       <ul>
+        <li><a href="#installing-via-sidestore">Installing via SideStore</a></li>
         <li><a href="#prerequisites">Prerequisites</a></li>
         <li><a href="#installation">Installation</a></li>
         <li><a href="#running-in-the-simulator">Running in the Simulator</a></li>
@@ -76,6 +77,7 @@
         <li><a href="#producing-a-feed">Producing a feed</a></li>
         <li><a href="#debug-screen">Debug screen</a></li>
         <li><a href="#docs-site">Docs site</a></li>
+        <li><a href="#releasing">Releasing</a></li>
       </ul>
     </li>
     <li><a href="#roadmap">Roadmap</a></li>
@@ -122,7 +124,17 @@ Point Workout Feed at a feed URL (a small JSON manifest plus workout files, host
 <!-- GETTING STARTED -->
 ## Getting Started
 
-There is no App Store release; you build and install the app onto your own iPhone from source.
+There is no App Store release. Install via [SideStore](#installing-via-sidestore) (no Mac needed after setup), or build from source.
+
+### Installing via SideStore
+
+With [SideStore](https://sidestore.io) set up on your iPhone (see [their docs](https://docs.sidestore.io) for the one-time setup), add this source and install Workout Feed from it:
+
+```
+https://bibixx.github.io/workout-feed/sidestore.json
+```
+
+SideStore re-signs the app on-device with your own free Apple ID, refreshes the 7-day signature from anywhere (no computer in the loop), and picks up new releases from the source automatically.
 
 ### Prerequisites
 
@@ -152,7 +164,7 @@ Prefer the terminal? `deploy.sh` builds, signs, and installs without the Xcode G
 ```
 
 > [!NOTE]
-> Free-account signing expires every 7 days, so re-run `./deploy.sh` (or use AltStore/SideStore auto-refresh).
+> Free-account signing expires every 7 days, so re-run `./deploy.sh` — or install [via SideStore](#installing-via-sidestore) instead, which refreshes the signature on-device.
 
 ### Running in the Simulator
 
@@ -218,7 +230,17 @@ Settings → tap the **Version** row 5×. Unlocks a Debug entry with: resolved c
 
 ### Docs site
 
-The setup guide is a single self-contained file, `docs/index.html`, with no build step and no external requests. Pushes to `main` that touch `docs/**` trigger `.github/workflows/docs.yml`, which deploys it to GitHub Pages at [bibixx.github.io/workout-feed](https://bibixx.github.io/workout-feed/). The app opens the same URL from Onboarding and Settings via `SafariView.feedSetupDocs`.
+The setup guide is a single self-contained file, `docs/index.html`, with no build step and no external requests. Pushes to `main` that touch `docs/**` trigger `.github/workflows/docs.yml`, which deploys it to GitHub Pages at [bibixx.github.io/workout-feed](https://bibixx.github.io/workout-feed/). The app opens the same URL from Onboarding and Settings via `SafariView.feedSetupDocs`. The same deploy also serves `docs/sidestore.json`, the [SideStore source](#installing-via-sidestore).
+
+### Releasing
+
+Releases are cut manually, no CI involved. Bump `MARKETING_VERSION` (and `CURRENT_PROJECT_VERSION`) in `project.yml`, then:
+
+```sh
+./release.sh "What changed in this release"
+```
+
+This builds an unsigned Release `.ipa` (`./build-ipa.sh`, reusable on its own), adds the version to `docs/sidestore.json`, commits + tags `v<version>`, pushes, and publishes the `.ipa` as a GitHub Release via `gh`. The Pages deploy then refreshes the SideStore source, and installed copies see the update.
 
 <p align="right">(<a href="#readme-top">back to top</a>)</p>
 
@@ -229,7 +251,7 @@ The setup guide is a single self-contained file, `docs/index.html`, with no buil
 
 - [ ] `.fit` file support (the `type` field already leaves room for it)
 - [ ] Multiple feeds
-- [ ] TestFlight distribution
+- [x] Sideload distribution via [SideStore](#installing-via-sidestore)
 
 See the [open issues](https://github.com/bibixx/workout-feed/issues) for a full list of proposed features (and known issues).
 

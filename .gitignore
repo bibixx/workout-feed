@@ -2,6 +2,9 @@
 *.xcodeproj/
 Info.plist
 
+# build-ipa.sh output
+dist/
+
 # Xcode
 *.xcworkspace/
 xcuserdata/
