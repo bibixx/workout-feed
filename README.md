@@ -166,6 +166,9 @@ The whole app works in the iOS Simulator — including scheduling. WorkoutKit's 
 
 On first launch the app asks for a **feed URL** (and an optional **Authorization** value). Paste them, and every planned workout in the feed gets scheduled onto the watch.
 
+> [!TIP]
+> The full user-facing setup guide lives at **[bibixx.github.io/workout-feed](https://bibixx.github.io/workout-feed/)** — it's the same page the in-app "How do I set up a feed?" button opens, with a quick start, hosting recipes, and troubleshooting.
+
 ### Feed contract (version 1)
 
 `GET <feed-url>` returns the manifest (a URL ending in `/` gets `index.json` appended):
@@ -201,7 +204,7 @@ Anything that can serve two static routes is a valid producer:
 * **[@bibixx/workoutkit](https://www.npmjs.com/package/@bibixx/workoutkit)** generates the `.workout` files (Apple WorkoutKit binaries) from TypeScript — write the manifest JSON next to them and host both.
 * **[trenuj.se](https://github.com/bibixx/trenuj-se)** is a live producer: it serves the contract at `/api/watch/index.json` + `/api/watch/w/<id>.workout`, authed by a long-lived watch token. See its README for how to connect this app.
 
-For local development, plain `http://` to a LAN host (e.g. `http://<mac-ip>:8787/…`) is allowed via the ATS local-networking exception; public feeds must be `https://`.
+Plain `http://` feeds are allowed anywhere (LAN dev servers, homelabs, static hosts without TLS) — the trade-off is that over http the Authorization value travels in cleartext, so use auth only over `https://` or on a network you trust.
 
 ### Debug screen
 
