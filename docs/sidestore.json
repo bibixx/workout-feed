@@ -25,7 +25,7 @@
       "versions": [
         {
           "version": "0.3",
-          "date": "2026-08-10",
+          "date": "2026-08-09T22:30:00Z",
           "localizedDescription": "First SideStore release.",
           "downloadURL": "https://github.com/bibixx/workout-feed/releases/download/v0.3/WorkoutFeed.ipa",
           "size": 3720833,

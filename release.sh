@@ -29,7 +29,9 @@ fi
 ./build-ipa.sh
 
 SIZE="$(stat -f%z dist/WorkoutFeed.ipa)"
-DATE="$(date +%Y-%m-%d)"
+# Full UTC timestamp, not a bare date: SideStore parses "YYYY-MM-DD" as midnight UTC,
+# which can be in the future locally and turns the release into a countdown.
+DATE="$(date -u +%Y-%m-%dT%H:%M:%SZ)"
 DOWNLOAD_URL="https://github.com/$REPO/releases/download/$TAG/WorkoutFeed.ipa"
 
 echo "- Updating $SOURCE_JSON (v$VERSION, $SIZE bytes)..."
