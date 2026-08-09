@@ -13,6 +13,7 @@ struct SettingsView: View {
     @State private var busy = false
     @State private var confirmDisconnect = false
     @State private var versionTaps = 0
+    @State private var showSetupGuide = false
     @AppStorage(ConfigStore.debugUnlockedKey) private var debugUnlocked = false
     @AppStorage(ConfigStore.syncIntervalKey) private var syncInterval = ConfigStore.defaultSyncInterval
 
@@ -31,6 +32,11 @@ struct SettingsView: View {
                         Task { await saveAndSync() }
                     }
                     .disabled(busy || feedURL.trimmed.isEmpty)
+                    Button {
+                        showSetupGuide = true
+                    } label: {
+                        Label("How to set up a feed", systemImage: "questionmark.circle")
+                    }
                 } header: {
                     Text("Feed")
                 } footer: {
@@ -81,6 +87,10 @@ struct SettingsView: View {
                 }
             }
             .onAppear(perform: load)
+            .sheet(isPresented: $showSetupGuide) {
+                SafariView(url: AppLinks.feedSetupDocs)
+                    .ignoresSafeArea()
+            }
             .confirmationDialog("Disconnect this feed?", isPresented: $confirmDisconnect, titleVisibility: .visible) {
                 Button("Disconnect & clear watch", role: .destructive) {
                     disconnect()

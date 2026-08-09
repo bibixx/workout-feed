@@ -7,6 +7,7 @@ struct OnboardingView: View {
     @State private var authHeader = ""
     @State private var busy = false
     @State private var error: String?
+    @State private var showSetupGuide = false
 
     var body: some View {
         NavigationStack {
@@ -36,6 +37,11 @@ struct OnboardingView: View {
                     SecureField("Authorization header (optional)", text: $authHeader)
                         .textInputAutocapitalization(.never)
                         .autocorrectionDisabled()
+                    Button {
+                        showSetupGuide = true
+                    } label: {
+                        Label("How do I set up a feed?", systemImage: "questionmark.circle")
+                    }
                 } header: {
                     Text("Feed")
                 } footer: {
@@ -62,6 +68,10 @@ struct OnboardingView: View {
                 }
             }
             .navigationTitle("Workout Feed")
+            .sheet(isPresented: $showSetupGuide) {
+                SafariView(url: AppLinks.feedSetupDocs)
+                    .ignoresSafeArea()
+            }
         }
     }
 
